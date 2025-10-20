@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduler Traffic Light Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+            margin-right: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+        }
+        
+        button {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .info-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .info-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .visualization-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            min-height: 400px;
+        }
+        
+        .process-lights {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .traffic-light {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .light-container {
+            background: #333;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .light {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 10px;
+            background: #555;
+            transition: all 0.3s;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .light.active.red {
+            background: radial-gradient(circle, #ff6b6b, #c92a2a);
+            box-shadow: 0 0 30px #ff6b6b, inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        
+        .light.active.yellow {
+            background: radial-gradient(circle, #ffd93d, #f5b700);
+            box-shadow: 0 0 30px #ffd93d, inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        
+        .light.active.green {
+            background: radial-gradient(circle, #51cf66, #2f9e44);
+            box-shadow: 0 0 30px #51cf66, inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        
+        .process-label {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .process-status {
+            margin-top: 5px;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .status-waiting {
+            background: #ffe066;
+            color: #856404;
+        }
+        
+        .status-running {
+            background: #51cf66;
+            color: #0d4715;
+        }
+        
+        .status-completed {
+            background: #ff6b6b;
+            color: #721c24;
+        }
+        
+        .timeline {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .timeline-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .timeline-bar {
+            display: flex;
+            height: 60px;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-right: 2px solid white;
+            transition: all 0.3s;
+        }
+        
+        .timeline-segment:hover {
+            transform: scaleY(1.1);
+            z-index: 10;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚦 CPU Scheduler Traffic Light Simulator</h1>
+        <p class="subtitle">Visualizing Operating System Scheduling Algorithms</p>
+        
+        <div class="upload-section">
+            <input type="file" id="fileInput" accept=".json">
+            <button onclick="loadFile()">Load Schedule</button>
+            <button onclick="startVisualization()" id="startBtn" disabled>Start Animation</button>
+            <button onclick="pauseVisualization()" id="pauseBtn" disabled>Pause</button>
+            <button onclick="resetVisualization()" id="resetBtn" disabled>Reset</button>
+        </div>
+        
+        <div class="info-panel" id="infoPanel" style="display: none;">
+            <div class="info-card">
+                <h3>Algorithm</h3>
+                <div class="value" id="algoName">-</div>
+            </div>
+            <div class="info-card">
+                <h3>Current Time</h3>
+                <div class="value" id="currentTime">0</div>
+            </div>
+            <div class="info-card">
+                <h3>Avg Waiting Time</h3>
+                <div class="value" id="avgWait">0</div>
+            </div>
+            <div class="info-card">
+                <h3>Avg Turnaround</h3>
+                <div class="value" id="avgTurn">0</div>
+            </div>
+        </div>
+        
+        <div class="visualization-area" id="vizArea" style="display: none;">
+            <div class="process-lights" id="processLights"></div>
+            
+            <div class="controls">
+                <div class="speed-control">
+                    <label>Speed:</label>
+                    <input type="range" id="speedControl" min="100" max="2000" value="1000" step="100">
+                    <span id="speedValue">1x</span>
+                </div>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-header">Gantt Chart Timeline</div>
+                <div class="timeline-bar" id="timelineBar"></div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Process ID</th>
+                        <th>Arrival Time</th>
+                        <th>Burst Time</th>
+                        <th>Completion Time</th>
+                        <th>Turnaround Time</th>
+                        <th>Waiting Time</th>
+                    </tr>
+                </thead>
+                <tbody id="processTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let scheduleData = null;
+        let currentEventIndex = 0;
+        let animationInterval = null;
+        let isPaused = false;
+        let speed = 1000;
+        
+        const colors = ['#667eea', '#ff6b6b', '#51cf66', '#ffd93d', '#764ba2', '#4ecdc4'];
+        
+        document.getElementById('speedControl').addEventListener('input', function(e) {
+            speed = 2100 - parseInt(e.target.value);
+            const speedMultiplier = (2000 / speed).toFixed(1);
+            document.getElementById('speedValue').textContent = speedMultiplier + 'x';
+            
+            if (animationInterval && !isPaused) {
+                clearInterval(animationInterval);
+                animationInterval = setInterval(animateStep, speed);
+            }
+        });
+        
+        function loadFile() {
+            const input = document.getElementById('fileInput');
+            const file = input.files[0];
+            
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    scheduleData = JSON.parse(e.target.result);
+                    initializeVisualization();
+                } catch (error) {
+                    alert('Error parsing JSON file: ' + error.message);
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function initializeVisualization() {
+            document.getElementById('infoPanel').style.display = 'grid';
+            document.getElementById('vizArea').style.display = 'block';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+            
+            document.getElementById('algoName').textContent = scheduleData.algorithm.replace(/_/g, ' ');
+            
+            const avgWait = scheduleData.processes.reduce((sum, p) => sum + p.waiting_time, 0) / scheduleData.processes.length;
+            const avgTurn = scheduleData.processes.reduce((sum, p) => sum + p.turnaround_time, 0) / scheduleData.processes.length;
+            
+            document.getElementById('avgWait').textContent = avgWait.toFixed(2);
+            document.getElementById('avgTurn').textContent = avgTurn.toFixed(2);
+            
+            createTrafficLights();
+            createProcessTable();
+            createGanttChart();
+            resetVisualization();
+        }
+        
+        function createTrafficLights() {
+            const container = document.getElementById('processLights');
+            container.innerHTML = '';
+            
+            scheduleData.processes.forEach((proc, idx) => {
+                const light = document.createElement('div');
+                light.className = 'traffic-light';
+                light.innerHTML = `
+                    <div class="light-container">
+                        <div class="light red" id="red-${proc.pid}"></div>
+                        <div class="light yellow" id="yellow-${proc.pid}"></div>
+                        <div class="light green" id="green-${proc.pid}"></div>
+                    </div>
+                    <div class="process-label">Process P${proc.pid}</div>
+                    <div class="process-status status-waiting" id="status-${proc.pid}">Waiting</div>
+                `;
+                container.appendChild(light);
+            });
+        }
+        
+        function createProcessTable() {
+            const tbody = document.getElementById('processTable');
+            tbody.innerHTML = '';
+            
+            scheduleData.processes.forEach(proc => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>P${proc.pid}</td>
+                    <td>${proc.arrival_time}</td>
+                    <td>${proc.burst_time}</td>
+                    <td>${proc.completion_time}</td>
+                    <td>${proc.turnaround_time}</td>
+                    <td>${proc.waiting_time}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function createGanttChart() {
+            const timeline = document.getElementById('timelineBar');
+            timeline.innerHTML = '';
+            
+            const events = scheduleData.events.filter(e => e.state === 'running' || e.state === 'idle');
+            const maxTime = Math.max(...scheduleData.processes.map(p => p.completion_time));
+            
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                const nextTime = i < events.length - 1 ? events[i + 1].time : maxTime;
+                const duration = nextTime - event.time;
+                
+                if (duration > 0) {
+                    const percentage = (duration / maxTime) * 100;
+                    const segment = document.createElement('div');
+                    segment.className = 'timeline-segment';
+                    segment.style.width = percentage + '%';
+                    
+                    if (event.state === 'idle') {
+                        segment.style.background = '#999';
+                        segment.textContent = 'Idle';
+                    } else {
+                        const colorIndex = (event.pid - 1) % colors.length;
+                        segment.style.background = colors[colorIndex];
+                        segment.textContent = `P${event.pid} (${event.time}-${nextTime})`;
+                    }
+                    
+                    timeline.appendChild(segment);
+                }
+            }
+        }
+        
+        function startVisualization() {
+            if (isPaused) {
+                isPaused = false;
+            } else {
+                currentEventIndex = 0;
+                resetAllLights();
+            }
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            
+            animationInterval = setInterval(animateStep, speed);
+        }
+        
+        function pauseVisualization() {
+            isPaused = true;
+            clearInterval(animationInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+        
+        function resetVisualization() {
+            clearInterval(animationInterval);
+            currentEventIndex = 0;
+            isPaused = false;
+            document.getElementById('currentTime').textContent = '0';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            resetAllLights();
+        }
+        
+        function resetAllLights() {
+            scheduleData.processes.forEach(proc => {
+                document.getElementById(`red-${proc.pid}`).classList.remove('active');
+                document.getElementById(`yellow-${proc.pid}`).classList.remove('active');
+                document.getElementById(`green-${proc.pid}`).classList.remove('active');
+                
+                const status = document.getElementById(`status-${proc.pid}`);
+                status.textContent = 'Waiting';
+                status.className = 'process-status status-waiting';
+            });
+        }
+        
+        function animateStep() {
+            if (currentEventIndex >= scheduleData.events.length) {
+                clearInterval(animationInterval);
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+                return;
+            }
+            
+            const event = scheduleData.events[currentEventIndex];
+            document.getElementById('currentTime').textContent = event.time;
+            
+            if (event.state === 'running') {
+                scheduleData.processes.forEach(proc => {
+                    const redLight = document.getElementById(`red-${proc.pid}`);
+                    const yellowLight = document.getElementById(`yellow-${proc.pid}`);
+                    const greenLight = document.getElementById(`green-${proc.pid}`);
+                    const status = document.getElementById(`status-${proc.pid}`);
+                    
+                    if (proc.pid === event.pid) {
+                        redLight.classList.remove('active');
+                        yellowLight.classList.remove('active');
+                        greenLight.classList.add('active');
+                        status.textContent = 'Running';
+                        status.className = 'process-status status-running';
+                    } else {
+                        const isCompleted = scheduleData.processes.find(p => p.pid === proc.pid).completion_time <= event.time;
+                        if (isCompleted) {
+                            redLight.classList.add('active');
+                            yellowLight.classList.remove('active');
+                            greenLight.classList.remove('active');
+                            status.textContent = 'Completed';
+                            status.className = 'process-status status-completed';
+                        } else {
+                            redLight.classList.remove('active');
+                            yellowLight.classList.add('active');
+                            greenLight.classList.remove('active');
+                            status.textContent = 'Waiting';
+                            status.className = 'process-status status-waiting';
+                        }
+                    }
+                });
+            } else if (event.state === 'completed') {
+                const redLight = document.getElementById(`red-${event.pid}`);
+                const yellowLight = document.getElementById(`yellow-${event.pid}`);
+                const greenLight = document.getElementById(`green-${event.pid}`);
+                const status = document.getElementById(`status-${event.pid}`);
+                
+                redLight.classList.add('active');
+                yellowLight.classList.remove('active');
+                greenLight.classList.remove('active');
+                status.textContent = 'Completed';
+                status.className = 'process-status status-completed';
+            }
+            
+            currentEventIndex++;
+        }
+    </script>
+</body>
+</html>
