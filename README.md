@@ -1,7 +1,7 @@
 || SMART LIGHT CONTROL MODEL ||
 <br>
 An amazing way to visualize Scheduling algorithms through a traffic light model.
-<br>
+Steps to follow in order to run the program : 
 1. Execute the C program file.
 <br>
 2. Enter all the necessary data.
