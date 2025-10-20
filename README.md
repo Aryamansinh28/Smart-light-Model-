@@ -1,13 +1,17 @@
 || SMART LIGHT CONTROL MODEL ||
 <br>
 An amazing way to visualize Scheduling algorithms through a traffic light model.
-Steps to follow in order to run the program : 
-1. Execute the C program file.
 <br>
-2. Enter all the necessary data.
+
+
+Steps to follow in order to run the program -
 <br>
-3. Check for the updated "output.json" file.
+A. Execute the main_program.c file
 <br>
-4. Open the Webpage using the "index.html" file.
+B. Enter all the necessary data.
 <br>
-5. Upload the "output.json" file onto the webpage and press "Load Schedule" followed by "Start animation".
+C. Check for the updated "output.json" file.
+<br>
+D. Open the Webpage using the "index.html" file.
+<br>
+E. Upload the "output.json" file onto the webpage and press "Load Schedule" followed by "Start animation".
