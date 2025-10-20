@@ -3,7 +3,6 @@
 An amazing way to visualize Scheduling algorithms through a traffic light model.
 <br>
 :: Steps to follow :: 
-<br>
 1. Execute the C program file.
 <br>
 2. Enter all the necessary data.
