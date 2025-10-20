@@ -1,0 +1,83 @@
+{
+  "algorithm": "SJF_Non_Preemptive",
+  "processes": [
+    {
+      "pid": 1,
+      "arrival_time": 0,
+      "burst_time": 7,
+      "priority": 0,
+      "completion_time": 7,
+      "turnaround_time": 7,
+      "waiting_time": 0
+    },
+    {
+      "pid": 2,
+      "arrival_time": 2,
+      "burst_time": 4,
+      "priority": 0,
+      "completion_time": 12,
+      "turnaround_time": 10,
+      "waiting_time": 6
+    },
+    {
+      "pid": 3,
+      "arrival_time": 4,
+      "burst_time": 1,
+      "priority": 0,
+      "completion_time": 8,
+      "turnaround_time": 4,
+      "waiting_time": 3
+    },
+    {
+      "pid": 4,
+      "arrival_time": 5,
+      "burst_time": 4,
+      "priority": 0,
+      "completion_time": 16,
+      "turnaround_time": 11,
+      "waiting_time": 7
+    }
+  ],
+  "events": [
+    {
+      "time": 0,
+      "pid": 1,
+      "state": "running"
+    },
+    {
+      "time": 7,
+      "pid": 1,
+      "state": "completed"
+    },
+    {
+      "time": 7,
+      "pid": 3,
+      "state": "running"
+    },
+    {
+      "time": 8,
+      "pid": 3,
+      "state": "completed"
+    },
+    {
+      "time": 8,
+      "pid": 2,
+      "state": "running"
+    },
+    {
+      "time": 12,
+      "pid": 2,
+      "state": "completed"
+    },
+    {
+      "time": 12,
+      "pid": 4,
+      "state": "running"
+    },
+    {
+      "time": 16,
+      "pid": 4,
+      "state": "completed"
+    }
+  ]
+}
